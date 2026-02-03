@@ -9,56 +9,60 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ currentPage, navigate, user }) => {
-  const navItems: { label: string; value: Page; icon: string }[] = [
-    { label: 'Home', value: 'dashboard', icon: 'fa-house' },
-    { label: 'Mood History', value: 'history', icon: 'fa-chart-line' },
-    { label: 'AI Support', value: 'chat', icon: 'fa-comment-dots' },
-    { label: 'Toolkit', value: 'toolkit', icon: 'fa-toolbox' },
+  const navItems: { label: string; value: Page }[] = [
+    { label: 'SANCTUARY', value: 'dashboard' },
+    { label: 'LANDSCAPE', value: 'history' },
+    { label: 'SERENAI', value: 'chat' },
+    { label: 'TOOLKIT', value: 'toolkit' },
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center glass border-b border-white/20 backdrop-blur-md">
-      <div 
-        className="flex items-center gap-2 cursor-pointer group"
-        onClick={() => navigate('landing')}
-      >
-        <div className="w-8 h-8 bg-[#8FB9A8] rounded-full flex items-center justify-center animate-pulse">
-          <i className="fa-solid fa-leaf text-white text-sm"></i>
-        </div>
-        <span className="font-serif text-xl font-bold tracking-tight text-[#2F4F4F]">MindEase</span>
-      </div>
-
-      <div className="hidden md:flex items-center gap-8">
-        {navItems.map((item) => (
-          <button
-            key={item.value}
-            onClick={() => navigate(item.value)}
-            className={`flex items-center gap-2 text-sm font-medium transition-all duration-300 ${
-              currentPage === item.value 
-                ? 'text-[#4DA6A6] scale-105' 
-                : 'text-[#2F4F4F]/70 hover:text-[#2F4F4F]'
-            }`}
-          >
-            <i className={`fa-solid ${item.icon}`}></i>
-            {item.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-4">
-        <span className="hidden sm:inline text-xs font-semibold text-[#2F4F4F]/60 bg-white/40 px-3 py-1 rounded-full border border-white/30">
-          Hello, {user.name}
-        </span>
-        <button 
-            onClick={() => navigate('profile')}
-            className={`w-10 h-10 rounded-full bg-white/50 border flex items-center justify-center hover:bg-white transition-all overflow-hidden ${currentPage === 'profile' ? 'border-[#8FB9A8] ring-2 ring-[#8FB9A8]/20' : 'border-white/50'}`}
+    <nav className="fixed top-8 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-5xl">
+      <div className="glass px-10 py-4 rounded-full flex justify-between items-center nav-pill">
+        {/* Brand */}
+        <div 
+          className="flex items-center gap-4 cursor-pointer group"
+          onClick={() => navigate('landing')}
         >
-          {user.avatar ? (
-            <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
-          ) : (
-            <i className="fa-solid fa-user text-[#2F4F4F]"></i>
-          )}
-        </button>
+          <div className="w-10 h-10 bg-[var(--text-primary)] rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:shadow-[0_0_20px_rgba(var(--primary-rgb,127,175,155),0.4)]">
+            <i className="fa-solid fa-leaf text-[var(--primary)] text-sm"></i>
+          </div>
+          <span className="font-serif text-2xl font-bold tracking-tight text-[var(--text-primary)]">MindEase</span>
+        </div>
+
+        {/* Navigation Items */}
+        <div className="hidden md:flex items-center gap-12">
+          {navItems.map((item) => (
+            <button
+              key={item.value}
+              onClick={() => navigate(item.value)}
+              className={`text-[11px] font-bold tracking-[0.2em] transition-all duration-500 relative py-2 ${
+                currentPage === item.value 
+                  ? 'text-[var(--text-primary)]' 
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              }`}
+            >
+              {item.label}
+              {currentPage === item.value && (
+                <div className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[var(--primary)] rounded-full"></div>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* User Profile */}
+        <div className="flex items-center gap-4">
+          <button 
+              onClick={() => navigate('profile')}
+              className={`w-12 h-12 rounded-2xl bg-[var(--text-primary)]/5 flex items-center justify-center hover:bg-[var(--text-primary)]/10 transition-all overflow-hidden border border-[var(--text-primary)]/10 ${currentPage === 'profile' ? 'shadow-inner' : ''}`}
+          >
+            {user.avatar ? (
+              <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <i className="fa-solid fa-user-circle text-[var(--text-primary)]/20 text-2xl"></i>
+            )}
+          </button>
+        </div>
       </div>
     </nav>
   );

@@ -1,11 +1,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { Message } from '../types';
 
 const AIChat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', role: 'model', text: "I'm SerenAI, your mindful companion. I'm here to listen, support, and help you find your way back to calm. How is your heart feeling right now?" }
+    { id: '1', role: 'model', text: "Welcome back to your quiet space. I'm SerenAI. Whatever is on your mind today, we can hold it together. How are you feeling right now?" }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -13,7 +13,10 @@ const AIChat: React.FC = () => {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
     }
   }, [messages]);
 
@@ -26,129 +29,132 @@ const AIChat: React.FC = () => {
     setInput('');
     setIsLoading(true);
 
+    const aiMessageId = Date.now().toString() + '-ai';
+    setMessages(prev => [...prev, { id: aiMessageId, role: 'model', text: '' }]);
+
     try {
-      // Create a new instance right before the call as per guidelines
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
+      const streamResponse = await ai.models.generateContentStream({
         model: 'gemini-3-flash-preview',
         contents: trimmedInput,
         config: {
-          systemInstruction: "You are SerenAI, an empathetic, validating, non-clinical AI mental health companion. Your tone is warm, calm, and reassuring. Use gentle language and focus on emotional validation. If the user mentions crisis or self-harm, gently provide hotline resources and emphasize you are an AI, not a therapist.",
+          systemInstruction: "You are SerenAI, an empathetic, professional wellness companion. Your tone is warm, calm, and insightful. Use clear paragraph breaks. Your color palette is mist and sage. Focus on emotional validation first, then gentle reframing. Use markdown spacing. Keep responses concise and supportive.",
           temperature: 0.7,
         },
       });
 
-      const aiText = response.text || "I'm here for you, but I'm having a little trouble connecting. Could you say that again?";
-      setMessages(prev => [...prev, { id: Date.now().toString() + '-ai', role: 'model', text: aiText }]);
+      let fullResponseText = '';
+      for await (const chunk of streamResponse) {
+        const c = chunk as GenerateContentResponse;
+        if (c.text) {
+          fullResponseText += c.text;
+          setMessages(prev => 
+            prev.map(m => m.id === aiMessageId ? { ...m, text: fullResponseText } : m)
+          );
+        }
+      }
     } catch (error) {
-      console.error('AIChat Error:', error);
-      setMessages(prev => [...prev, { id: Date.now().toString() + '-err', role: 'model', text: "I apologize, my connection is a bit fuzzy. Let's try again in a moment." }]);
+      setMessages(prev => prev.map(m => m.id === aiMessageId ? { ...m, text: "I've momentarily lost my connection to the forest. Let's take a deep breath together and try again." } : m));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const chips = [
-    "I feel overwhelmed",
-    "I need to vent about work",
-    "Help me find focus",
-    "Tell me something peaceful"
-  ];
-
   return (
-    <div className="pt-24 pb-8 px-4 h-screen flex flex-col bg-[#F4FAF8]">
-      <div className="max-w-5xl mx-auto w-full h-full flex flex-col space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between bg-white/80 backdrop-blur-md border border-white p-4 rounded-3xl shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#8FBC8F] to-[#7BC8A4] rounded-2xl flex items-center justify-center animate-pulse shadow-sm">
-                <i className="fa-solid fa-lotus text-white"></i>
+    <div className="pt-32 pb-6 px-6 h-screen flex flex-col bg-[var(--bg-main)] relative overflow-hidden transition-colors duration-700">
+      {/* Soft Background Ambiance */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent pointer-events-none"></div>
+      <div className="absolute top-1/4 -right-32 w-[500px] h-[500px] bg-[var(--primary)]/5 rounded-full blur-[120px] pointer-events-none animate-pulse"></div>
+
+      <div className="max-w-4xl mx-auto w-full h-full flex flex-col space-y-4 relative z-10">
+        {/* SerenAI Header */}
+        <div className="flex items-center justify-between px-8 py-4 bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/40 shadow-sm">
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-[var(--primary)] shadow-sm border border-[var(--divider)]">
+              <i className="fa-solid fa-leaf text-2xl"></i>
             </div>
             <div>
-              <h2 className="text-[#2F4F4F] font-serif font-bold">SerenAI</h2>
-              <p className="text-[#2F4F4F]/40 text-xs flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"></span>
-                Attuned to your peace
-              </p>
+              <h2 className="text-2xl font-serif font-bold text-[var(--text-primary)] tracking-tight">SerenAI</h2>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="w-2 h-2 bg-[var(--primary)] rounded-full animate-pulse"></span>
+                <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-[var(--text-muted)]">Attuned Presence</span>
+              </div>
             </div>
           </div>
-          <div className="hidden sm:flex items-center gap-4 text-[#2F4F4F]/20 text-xs uppercase tracking-widest font-bold">
-            <span>Validation</span>
-            <span>•</span>
-            <span>Support</span>
-            <span>•</span>
-            <span>Calm</span>
+          <div className="hidden sm:block">
+            <div className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)]/5 rounded-full">
+               <i className="fa-solid fa-shield-halved text-[var(--primary)] text-[10px]"></i>
+               <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-[var(--text-primary)]/40">Private Sanctuary</span>
+            </div>
           </div>
         </div>
 
-        {/* Chat Area */}
+        {/* Chat Conversation Area */}
         <div 
           ref={scrollRef}
-          className="flex-1 overflow-y-auto space-y-6 px-2 py-4 scrollbar-hide"
+          className="flex-1 overflow-y-auto space-y-10 px-4 py-8 scrollbar-hide"
         >
           {messages.map((m) => (
             <div 
               key={m.id} 
-              className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade`}
             >
               <div 
-                className={`max-w-[85%] sm:max-w-[70%] p-5 rounded-[2rem] text-sm md:text-base leading-relaxed ${
+                className={`max-w-[85%] sm:max-w-[75%] p-7 rounded-[2.5rem] text-base leading-relaxed whitespace-pre-wrap transition-all duration-700 shadow-sm ${
                   m.role === 'user' 
-                    ? 'bg-[#8FBC8F] text-white rounded-tr-none shadow-md shadow-[#8FBC8F]/10' 
-                    : 'bg-white text-[#2F4F4F]/90 border border-gray-100 rounded-tl-none shadow-sm'
+                    ? 'bg-[var(--primary)]/10 text-[var(--text-primary)] rounded-br-none border border-[var(--primary)]/20' 
+                    : 'bg-white text-[var(--text-primary)] rounded-bl-none border border-[var(--divider)]'
                 }`}
               >
                 {m.text}
+                {m.role === 'model' && m.text === '' && (
+                  <div className="flex gap-2 py-3 items-center">
+                    <div className="w-2 h-2 bg-[var(--primary)] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="w-2 h-2 bg-[var(--primary)] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="w-2 h-2 bg-[var(--primary)] rounded-full animate-bounce"></div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-white/80 backdrop-blur-sm p-5 rounded-[2rem] rounded-tl-none border border-gray-100 flex gap-2 shadow-sm">
-                <div className="w-2 h-2 bg-[#8FBC8F]/40 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-[#8FBC8F]/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-2 h-2 bg-[#8FBC8F]/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Quick Chips */}
-        {messages.length < 3 && !isLoading && (
-          <div className="flex flex-wrap gap-2 justify-center pb-2">
-            {chips.map((chip, i) => (
-              <button
-                key={i}
-                onClick={() => { setInput(chip); }}
-                className="px-4 py-2 bg-white/60 border border-white text-[#2F4F4F]/60 rounded-full text-xs hover:bg-[#8FBC8F] hover:text-white transition-all active:scale-95 shadow-sm"
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Input */}
-        <div className="bg-white/90 backdrop-blur-xl border border-white p-4 rounded-3xl space-y-3 shadow-lg">
-          <div className="flex items-center gap-3">
+        {/* User Input Area */}
+        <div className="bg-white p-5 rounded-[3rem] shadow-2xl border border-[var(--divider)] relative group transition-all focus-within:ring-4 focus-within:ring-[var(--primary)]/5">
+          <div className="flex items-center gap-4">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-              placeholder="Share what's on your mind..."
-              className="flex-1 bg-transparent border-none text-[#2F4F4F] outline-none resize-none h-12 py-2 placeholder:text-[#2F4F4F]/20"
+              placeholder="What is heavy on your heart?"
+              className="flex-1 bg-transparent border-none text-[var(--text-primary)] outline-none resize-none h-12 py-3 placeholder:text-[var(--text-muted)] text-lg font-light px-4"
             />
             <button
               onClick={handleSend}
               disabled={isLoading || !input.trim()}
-              className="w-12 h-12 bg-[#8FBC8F] text-white rounded-2xl flex items-center justify-center hover:bg-[#7ba87b] transition-all disabled:opacity-30 disabled:hover:bg-[#8FBC8F] shadow-sm"
+              className="w-14 h-14 bg-[var(--primary)] text-white rounded-[1.5rem] flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-20 shadow-xl"
             >
-              <i className="fa-solid fa-paper-plane"></i>
+              <i className="fa-solid fa-paper-plane text-xl"></i>
             </button>
           </div>
-          <p className="text-[10px] text-[#2F4F4F]/30 text-center uppercase tracking-widest font-medium">
-            SerenAI is an AI support companion, not a replacement for professional therapy.
-          </p>
+          
+          {/* Quick Guidance Chips */}
+          <div className="flex flex-wrap gap-3 mt-4 px-4">
+            {[
+              { label: "Help me reflect", icon: "fa-feather" },
+              { label: "Feeling anxious", icon: "fa-wind" },
+              { label: "Need to reframe", icon: "fa-arrows-rotate" }
+            ].map(chip => (
+              <button 
+                key={chip.label}
+                onClick={() => setInput(chip.label)}
+                className="flex items-center gap-3 text-[9px] uppercase tracking-[0.3em] font-bold text-[var(--text-secondary)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/5 px-5 py-2.5 rounded-full border border-[var(--divider)] transition-all"
+              >
+                <i className={`fa-solid ${chip.icon} text-[8px]`}></i>
+                {chip.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -9,14 +9,22 @@ export interface User {
   bio?: string;
 }
 
+export interface LifestyleStats {
+  sleepHours: number;
+  waterOunces: number;
+  mindfulMinutes: number;
+  steps: number;
+}
+
 export interface MoodEntry {
-  _id?: string; // MongoDB ID
-  id?: string;  // Legacy/Frontend ID
-  date: string; // Full ISO string
+  _id?: string;
+  id?: string;
+  date: string;
   mood: string;
   note: string;
   icon?: string;
-  tags: string[]; // Context tags like #Work, #Social
+  tags: string[];
+  lifestyle?: LifestyleStats;
 }
 
 export interface Message {
@@ -26,12 +34,12 @@ export interface Message {
 }
 
 export const MoodColorMap: Record<string, string> = {
-  Happy: '#7BC8A4',
-  Sad: '#8FB9A8',
-  Stressed: '#FDBA74',
-  Tired: '#93C5FD',
-  Neutral: '#CBD5E1',
-  default: '#8FB9A8'
+  Vibrant: '#D4A017', // Solstice Gold
+  Calm: '#6A9382',    // Deep Sage
+  Heavy: '#14211E',    // Evergreen Charcoal
+  Frayed: '#C97272',   // Muted Rose
+  Steady: '#8B9D98',   // Mist Gray
+  default: '#6A9382'
 };
 
 export const TagIconMap: Record<string, string> = {

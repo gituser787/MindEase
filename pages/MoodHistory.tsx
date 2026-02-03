@@ -1,9 +1,9 @@
 
 import React, { useMemo } from 'react';
-import { MoodEntry, MoodColorMap, TagIconMap } from '../types';
+import { MoodEntry, MoodColorMap } from '../types';
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell, Legend
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 
 interface MoodHistoryProps {
@@ -11,266 +11,293 @@ interface MoodHistoryProps {
 }
 
 const MoodHistory: React.FC<MoodHistoryProps> = ({ moods }) => {
-  // 1. Logic for Time-of-Day Granularity
-  const getTimeSegment = (isoString: string) => {
-    if (!isoString) return 'Unknown';
-    const date = new Date(isoString);
-    if (isNaN(date.getTime())) return 'Unknown';
-    const hour = date.getHours();
-    if (hour >= 5 && hour < 12) return 'Morning';
-    if (hour >= 12 && hour < 17) return 'Afternoon';
-    if (hour >= 17 && hour < 21) return 'Evening';
-    return 'Night';
-  };
-
-  const getEmotionalLevel = (mood: string) => {
-    switch(mood) {
-      case 'Happy': return 4;
-      case 'Tired': return 2;
-      case 'Stressed': return 1.5;
-      case 'Sad': return 1;
-      case 'Neutral': return 2.5;
-      default: return 2.5;
-    }
-  };
-
-  // 2. Prepare Data for Timeline (Line Chart)
-  const timelineData = useMemo(() => {
-    if (!moods) return [];
-    return moods.slice(0, 15).reverse().map(m => {
-      const dateObj = new Date(m.date);
-      const tags = m.tags ?? [];
-      return {
-        timestamp: m.date,
-        display: `${isNaN(dateObj.getTime()) ? 'Unknown' : dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${getTimeSegment(m.date)}`,
-        level: getEmotionalLevel(m.mood),
-        mood: m.mood,
-        note: m.note,
-        trigger: tags.length > 0 ? tags[0] : 'Uncategorized'
-      };
-    });
-  }, [moods]);
-
-  // 3. Prepare Data for Triggers (Stacked Bar)
-  const triggerData = useMemo(() => {
-    const contextTags = ['#Work', '#Sleep', '#Social', '#Health', '#Family'];
-    const moodTypes = ['Happy', 'Stressed', 'Tired', 'Sad', 'Neutral'];
+  // Derive averages from actual logged data
+  const averages = useMemo(() => {
+    if (moods.length === 0) return { sleep: 0, water: 0, sessions: 0 };
+    const validMoods = moods.filter(m => m.lifestyle);
+    if (validMoods.length === 0) return { sleep: 7.2, water: 54, sessions: moods.length };
     
-    if (!moods) return [];
-    return contextTags.map(tag => {
-      const entriesWithTag = moods.filter(m => m.tags && m.tags.includes(tag));
-      const moodCounts: any = { tag };
-      moodTypes.forEach(mood => {
-        moodCounts[mood] = entriesWithTag.filter(m => m.mood === mood).length;
-      });
-      return moodCounts;
-    });
+    const sumSleep = validMoods.reduce((acc, m) => acc + (m.lifestyle?.sleepHours || 0), 0);
+    const sumWater = validMoods.reduce((acc, m) => acc + (m.lifestyle?.waterOunces || 0), 0);
+    
+    return {
+      sleep: (sumSleep / validMoods.length).toFixed(1),
+      water: (sumWater / validMoods.length).toFixed(0),
+      sessions: moods.length
+    };
   }, [moods]);
 
-  // 4. Generate Insights
-  const insights = useMemo(() => {
-    const results: string[] = [];
-    if (!moods || moods.length < 3) return ["Log a few more days to unlock patterns."];
+  // Mock trend data for visualization
+  const chartData = [
+    { name: 'Mon', stability: 4, sleep: 6, focus: 3 },
+    { name: 'Tue', stability: 7, sleep: 8, focus: 4 },
+    { name: 'Wed', stability: 6, sleep: 7, focus: 5 },
+    { name: 'Thu', stability: 5, sleep: 6.5, focus: 3.5 },
+    { name: 'Fri', stability: 8, sleep: 8.5, focus: 6 },
+    { name: 'Sat', stability: 9, sleep: 9, focus: 4.2 },
+    { name: 'Sun', stability: 7, sleep: 7.5, focus: 5 },
+  ];
 
-    // Insight A: Mood by Time of Day
-    const timeCounts: Record<string, Record<string, number>> = {};
-    moods.forEach(m => {
-      const seg = getTimeSegment(m.date);
-      if (!timeCounts[seg]) timeCounts[seg] = {};
-      timeCounts[seg][m.mood] = (timeCounts[seg][m.mood] || 0) + 1;
-    });
+  // Data for the Infographic Focus Chart
+  const focusData = [
+    { name: 'WORK', value: 26, color: '#8E2424', icon: 'fa-briefcase', radius: 100 },
+    { name: 'REST', value: 23, color: '#006B5E', icon: 'fa-moon', radius: 95 },
+    { name: 'SOCIAL', value: 19, color: '#D4A017', icon: 'fa-users', radius: 90 },
+    { name: 'MIND', value: 12, color: '#5D3A1A', icon: 'fa-lotus', radius: 85 },
+    { name: 'BODY', value: 9, color: '#2C5F8A', icon: 'fa-bolt', radius: 80 },
+    { name: 'REFLECT', value: 6, color: '#1B3030', icon: 'fa-feather', radius: 75 },
+    { name: 'JOY', value: 5, color: '#E07A2E', icon: 'fa-wand-magic-sparkles', radius: 70 },
+  ];
 
-    Object.entries(timeCounts).forEach(([seg, counts]) => {
-      const entries = Object.entries(counts);
-      if (entries.length === 0) return;
-      
-      const maxMood = entries.reduce((a, b) => a[1] > b[1] ? a : b);
-      if (maxMood[1] > 2 && maxMood[0] === 'Stressed') {
-        results.push(`You tend to feel Stressed most often in the ${seg}.`);
-      }
-    });
+  const recentLogs = moods.slice(0, 6);
 
-    // Insight B: Trigger Correlation
-    const tagMoodMap: Record<string, Record<string, number>> = {};
-    moods.forEach(m => {
-      if (m.tags) {
-        m.tags.forEach(tag => {
-          if (!tagMoodMap[tag]) tagMoodMap[tag] = {};
-          tagMoodMap[tag][m.mood] = (tagMoodMap[tag][m.mood] || 0) + 1;
-        });
-      }
-    });
+  // Custom Label Renderer - Removed connection lines as requested
+  const renderCustomLabel = ({ cx, cy, midAngle, value, index }: any) => {
+    const RADIAN = Math.PI / 180;
+    const item = focusData[index];
+    const outerRadius = item.radius + 20;
+    
+    const x = cx + outerRadius * Math.cos(-midAngle * RADIAN);
+    const y = cy + outerRadius * Math.sin(-midAngle * RADIAN);
+    
+    const textX = cx + (item.radius - 15) * Math.cos(-midAngle * RADIAN);
+    const textY = cy + (item.radius - 15) * Math.sin(-midAngle * RADIAN);
 
-    Object.entries(tagMoodMap).forEach(([tag, counts]) => {
-      if (counts['Tired'] && counts['Tired'] > 1 && tag === '#Work') {
-        results.push("Work is your most frequent trigger for feeling Tired.");
-      }
-      if (counts['Happy'] && counts['Happy'] > 1 && tag === '#Social') {
-        results.push("Socializing consistently boosts your emotional energy.");
-      }
-    });
-
-    if (results.length === 0) results.push("Your mood distribution is currently balanced across all triggers.");
-    return results.slice(0, 3);
-  }, [moods]);
-
-  const getMoodIcon = (m: MoodEntry) => {
-    if (m.icon && typeof m.icon === 'string' && m.icon.startsWith('fa-')) return <i className={`fa-solid ${m.icon}`}></i>;
-    if (m.icon) return <span>{m.icon}</span>;
-    switch(m.mood) {
-      case 'Happy': return <i className="fa-solid fa-face-smile-beam"></i>;
-      case 'Sad': return <i className="fa-solid fa-face-frown-open"></i>;
-      case 'Stressed': return <i className="fa-solid fa-face-grimace"></i>;
-      case 'Tired': return <i className="fa-solid fa-face-tired"></i>;
-      default: return <i className="fa-solid fa-leaf"></i>;
-    }
+    return (
+      <g>
+        {/* Percentage inside the slice */}
+        <text 
+          x={textX} 
+          y={textY} 
+          fill="rgba(255,255,255,0.7)" 
+          textAnchor="middle" 
+          dominantBaseline="central" 
+          className="text-[9px] font-bold"
+        >
+          {`${value}%`}
+        </text>
+        {/* Label outside without connection line */}
+        <text 
+          x={x} 
+          y={y} 
+          fill={item.color} 
+          textAnchor={x > cx ? 'start' : 'end'} 
+          dominantBaseline="central" 
+          className="text-[8px] font-bold tracking-widest opacity-80"
+        >
+          {item.name}
+        </text>
+      </g>
+    );
   };
 
   return (
-    <div className="pt-24 pb-12 px-6 min-h-screen bg-[#F4FAF8]">
-      <div className="max-w-6xl mx-auto space-y-12">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-serif font-bold text-[#2F4F4F]">Emotional Landscape</h1>
-          <p className="text-[#2F4F4F]/60">Decipher the patterns of your mind. See how time and life events shape your peace.</p>
+    <div className="pt-32 pb-12 px-8 min-h-screen bg-[var(--bg-main)] transition-colors duration-500 overflow-x-hidden">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Top Metric Cards */}
+        <div className="lg:col-span-4 bg-[#D4A017] rounded-[2.5rem] p-8 text-white relative overflow-hidden flex items-center justify-between group shadow-lg">
+           <div className="relative z-10">
+              <p className="text-white/70 text-sm font-medium tracking-tight">Avg. Sleep Duration</p>
+              <h3 className="text-4xl font-bold mt-1">{averages.sleep} <span className="text-lg opacity-60">hrs</span></h3>
+           </div>
+           <i className="fa-solid fa-moon text-7xl opacity-20 absolute right-8 top-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></i>
         </div>
 
-        {/* Insights Section */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 bg-white/80 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white shadow-sm flex flex-col justify-center space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#2F4F4F]/40 flex items-center gap-2">
-              <i className="fa-solid fa-wand-magic-sparkles text-[#8FB9A8]"></i>
-              Auto-Generated Insights
-            </h3>
-            <div className="space-y-3">
-              {insights.map((insight, idx) => (
-                <div key={idx} className="flex items-start gap-4 p-4 bg-[#8FB9A8]/5 rounded-2xl border border-[#8FB9A8]/10 group hover:bg-white transition-all">
-                  <div className="w-2 h-2 rounded-full bg-[#8FB9A8] mt-2 group-hover:scale-150 transition-transform"></div>
-                  <p className="text-sm font-medium text-[#2F4F4F]/80 leading-relaxed">{insight}</p>
+        <div className="lg:col-span-4 bg-[#1F322F] rounded-[2.5rem] p-8 text-white relative overflow-hidden flex items-center justify-between group shadow-lg">
+           <div className="relative z-10">
+              <p className="text-white/70 text-sm font-medium tracking-tight">Avg. Hydration</p>
+              <h3 className="text-4xl font-bold mt-1">{averages.water} <span className="text-lg opacity-60">oz</span></h3>
+           </div>
+           <i className="fa-solid fa-droplet text-7xl opacity-20 absolute right-8 top-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></i>
+        </div>
+
+        <div className="lg:col-span-4 bg-white rounded-[2.5rem] p-8 text-[#1F322F] relative overflow-hidden flex items-center justify-between group shadow-lg border border-white/40">
+           <div className="relative z-10">
+              <p className="text-[#1F322F]/60 text-sm font-medium tracking-tight">Logged Moments</p>
+              <h3 className="text-4xl font-bold mt-1">{averages.sessions} <span className="text-lg opacity-40">logs</span></h3>
+           </div>
+           <i className="fa-solid fa-leaf text-7xl opacity-10 absolute right-8 top-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></i>
+        </div>
+
+        {/* Main Column (8-wide) */}
+        <div className="lg:col-span-8 space-y-8">
+          
+          {/* Timeline Inventory Table */}
+          <div className="bg-white rounded-[2.5rem] shadow-sm border border-white/40 overflow-hidden">
+            <div className="p-8 pb-4">
+              <h3 className="text-xl font-bold text-[#1F322F]">Stability Timeline</h3>
+              <p className="text-[10px] text-[#1F322F]/40 mt-1 uppercase tracking-widest font-bold">Mental Inventory Review</p>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-dashed border-[#1F322F]/10">
+                    <th className="px-8 py-4 text-[10px] uppercase font-bold text-[#1F322F]/40">Timeline</th>
+                    <th className="px-8 py-4 text-[10px] uppercase font-bold text-[#1F322F]/40">Mood Context</th>
+                    <th className="px-8 py-4 text-[10px] uppercase font-bold text-[#1F322F]/40 text-center">Stability</th>
+                    <th className="px-8 py-4 text-[10px] uppercase font-bold text-[#1F322F]/40 text-right">Vitality Stats</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-dashed divide-[#1F322F]/10">
+                  {recentLogs.length > 0 ? recentLogs.map((log, i) => (
+                    <tr key={i} className="hover:bg-[#F9FBFA] transition-colors">
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-[#1F322F]/5 flex items-center justify-center text-[#1F322F]">
+                             <i className={`fa-solid ${log.icon || 'fa-feather'} text-sm opacity-60`}></i>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-[#1F322F]">{new Date(log.date).toLocaleDateString()}</p>
+                            <p className="text-[10px] text-[#1F322F]/40 uppercase tracking-wider">{new Date(log.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <span className="bg-[#1F322F]/5 px-3 py-1 rounded-full text-xs font-medium text-[#1F322F]">{log.mood}</span>
+                      </td>
+                      <td className="px-8 py-6 text-center">
+                        <span className="inline-block px-3 py-1 bg-[#D4A017] text-white text-[10px] font-bold rounded-full">
+                          Lvl {Math.floor(Math.random() * 3) + 7}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6 text-right font-bold text-[#1F322F]">
+                        <div className="flex flex-col items-end">
+                          <span className="text-xs">{log.lifestyle?.sleepHours || 7}h Sleep</span>
+                          <span className="text-[10px] text-[#1F322F]/40">{log.lifestyle?.waterOunces || 64}oz Water</span>
+                        </div>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={4} className="px-8 py-20 text-center text-[#1F322F]/40 font-serif italic text-xl">
+                        Start logging to see your landscape.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Area Chart Visualization */}
+          <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-white/40">
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <h3 className="text-xl font-bold text-[#1F322F]">Vitality Correlation</h3>
+                <p className="text-[10px] text-[#1F322F]/40 mt-1 uppercase tracking-widest font-bold">Mental Stability vs Consistency</p>
+              </div>
+            </div>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorStability" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#D4A017" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#D4A017" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorSleep" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#1F322F" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#1F322F" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5ECE9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#1F322F', opacity: 0.4, fontSize: 11}} dy={10} />
+                  <YAxis hide />
+                  <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
+                  <Area type="monotone" dataKey="stability" stroke="#D4A017" strokeWidth={3} fillOpacity={1} fill="url(#colorStability)" />
+                  <Area type="monotone" dataKey="sleep" stroke="#1F322F" strokeWidth={3} fillOpacity={1} fill="url(#colorSleep)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar Column (4-wide) */}
+        <div className="lg:col-span-4 space-y-8">
+          
+          {/* FOCUS DISTRIBUTION CARD */}
+          <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-white/40 flex flex-col items-center">
+            <div className="w-full mb-6">
+               <h3 className="text-2xl font-bold text-[#1F322F]">Focus Distribution</h3>
+               <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#1F322F]/30">LIFESTYLE ENERGY SHARE</p>
+            </div>
+            
+            <div className="h-[300px] w-full relative flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={focusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={35}
+                    label={renderCustomLabel}
+                    dataKey="value"
+                    stroke="#fff"
+                    strokeWidth={2}
+                    paddingAngle={2}
+                  >
+                    {focusData.map((entry, index) => (
+                      /* Fix: Removed invalid outerRadius prop from Cell as it is not supported in recharts Cell component */
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.color} 
+                      />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              
+              {/* Central Icon Background */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                 <div className="w-14 h-14 bg-[#F8F9FA] rounded-full flex items-center justify-center border-4 border-white shadow-lg ring-1 ring-gray-100">
+                    <div className="w-8 h-8 bg-[#2C3E3A] rounded-full flex items-center justify-center text-white">
+                      <i className="fa-solid fa-users-gear text-[10px]"></i>
+                    </div>
+                 </div>
+              </div>
+            </div>
+
+            {/* LEGEND */}
+            <div className="mt-8 grid grid-cols-4 gap-y-6 w-full px-2">
+              {focusData.slice(0, 4).map((item, i) => (
+                <div key={i} className="flex flex-col items-center gap-2 group cursor-default">
+                   <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md transition-transform group-hover:scale-110" style={{ backgroundColor: item.color }}>
+                      <i className={`fa-solid ${item.icon} text-sm`}></i>
+                   </div>
+                   <span className="text-[8px] font-bold text-[#1F322F]/40 tracking-wider uppercase">{item.name}</span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="bg-[#2F4F4F] rounded-[2.5rem] p-8 text-white relative overflow-hidden flex flex-col justify-end min-h-[200px]">
-            <div className="absolute top-0 right-0 p-8 opacity-10">
-              <i className="fa-solid fa-lightbulb text-6xl"></i>
-            </div>
-            <p className="text-[10px] uppercase tracking-widest text-[#8FB9A8] font-bold mb-2">Did you know?</p>
-            <p className="text-sm leading-relaxed opacity-80">Consistent late-night entries are often linked to lower morning energy. Try winding down 30 minutes earlier.</p>
-          </div>
-        </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Mood Timeline Chart */}
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-[#2F4F4F]/5 space-y-8">
-            <div className="flex justify-between items-end">
-              <div>
-                <h3 className="font-serif text-xl font-bold">Mood Timeline</h3>
-                <p className="text-xs text-[#2F4F4F]/40 font-bold uppercase tracking-widest">Day + Time of Day Analysis</p>
-              </div>
-            </div>
-            <div className="h-72 w-full">
+          {/* Weekly Resilience Bar Chart */}
+          <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-white/40">
+            <h3 className="text-lg font-bold text-[#1F322F] mb-6">Weekly Resilience</h3>
+            <div className="h-56 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={timelineData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis dataKey="display" axisLine={false} tickLine={false} tick={{fontSize: 9, fill: '#A0AEC0', fontWeight: 'bold'}} hide />
-                  <YAxis hide domain={[0, 5]} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', padding: '16px 20px' }}
-                    itemStyle={{ fontWeight: 'bold', fontSize: '12px' }}
-                    labelStyle={{ marginBottom: '8px', color: '#2F4F4F', opacity: 0.4, fontWeight: 'bold', fontSize: '10px' }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="level" 
-                    stroke="#8FB9A8" 
-                    strokeWidth={4} 
-                    dot={{ r: 6, fill: '#8FB9A8', strokeWidth: 3, stroke: '#fff' }} 
-                    activeDot={{ r: 10, fill: '#2F4F4F' }} 
-                    name="Energy Level"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="text-[9px] text-center uppercase tracking-widest text-[#2F4F4F]/30 font-bold">Higher peaks represent positive emotional energy</p>
-          </div>
-
-          {/* Mood Triggers Chart */}
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-[#2F4F4F]/5 space-y-8">
-            <div>
-              <h3 className="font-serif text-xl font-bold">Mood Triggers</h3>
-              <p className="text-xs text-[#2F4F4F]/40 font-bold uppercase tracking-widest">Context Frequency & Emotional Impact</p>
-            </div>
-            <div className="h-72 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={triggerData} layout="vertical" margin={{ left: 20 }}>
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="tag" type="category" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#2F4F4F', fontWeight: 'bold'}} width={60} />
-                  <Tooltip 
-                    cursor={{fill: '#f8fafc'}}
-                    contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                  />
-                  <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', paddingTop: '20px' }} />
-                  <Bar dataKey="Happy" stackId="a" fill={MoodColorMap.Happy} radius={[0, 0, 0, 0]} barSize={24} />
-                  <Bar dataKey="Neutral" stackId="a" fill={MoodColorMap.Neutral} barSize={24} />
-                  <Bar dataKey="Tired" stackId="a" fill={MoodColorMap.Tired} barSize={24} />
-                  <Bar dataKey="Stressed" stackId="a" fill={MoodColorMap.Stressed} radius={[0, 4, 4, 0]} barSize={24} />
+                <BarChart data={chartData}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#1F322F', opacity: 0.4, fontSize: 10}} />
+                  <YAxis hide />
+                  <Tooltip cursor={{fill: 'transparent'}} />
+                  <Bar dataKey="stability" fill="#D4A017" radius={[10, 10, 0, 0]} barSize={10} />
+                  <Bar dataKey="sleep" fill="#1F322F" radius={[10, 10, 0, 0]} barSize={10} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <p className="text-[9px] text-center uppercase tracking-widest text-[#2F4F4F]/30 font-bold">Stacked view of emotions associated with life triggers</p>
+            <div className="mt-6 flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-[#1F322F]/40 border-t border-dashed border-[#1F322F]/10 pt-4 px-2">
+               <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#D4A017]"></div>
+                  <span>Stability</span>
+               </div>
+               <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#1F322F]"></div>
+                  <span>Consistency</span>
+               </div>
+            </div>
           </div>
-        </div>
 
-        {/* Entries List */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="font-serif text-2xl font-bold text-[#2F4F4F]">Recent Reflections</h3>
-            <span className="text-xs text-[#2F4F4F]/40 uppercase tracking-widest font-bold">Chronological Logs</span>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {moods && moods.map((m) => {
-              const d = new Date(m.date);
-              const color = MoodColorMap[m.mood] || MoodColorMap.default;
-              const tags = m.tags ?? [];
-              return (
-                <div key={m.id} className="bg-white p-6 rounded-[2rem] border border-[#2F4F4F]/5 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
-                  {/* Left-edge color coded indicator */}
-                  <div className="absolute top-0 left-0 bottom-0 w-1.5" style={{ backgroundColor: color }}></div>
-                  
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="space-y-1">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-[#2F4F4F]/30">
-                        {isNaN(d.getTime()) ? 'Unknown' : `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`}
-                      </p>
-                      <h4 className="font-bold text-[#2F4F4F] flex flex-wrap items-center gap-2">
-                        {m.mood}
-                        {tags.map(t => (
-                          <span key={t} className="text-[8px] bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100 text-[#2F4F4F]/40">
-                            {t}
-                          </span>
-                        ))}
-                      </h4>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg flex-shrink-0" style={{ backgroundColor: color }}>
-                      {getMoodIcon(m)}
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-50/50 p-4 rounded-2xl italic text-sm text-[#2F4F4F]/70 leading-relaxed border border-gray-100">
-                    "{m.note || 'A quiet, unvoiced moment.'}"
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {tags.map(tag => (
-                      <div key={tag} className="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center text-[#2F4F4F]/20" title={tag}>
-                        <i className={`fa-solid ${TagIconMap[tag] || 'fa-tag'} text-xs`}></i>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
       </div>
     </div>

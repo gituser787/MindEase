@@ -4,34 +4,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MindEase - Find Your Calm</title>
+    <title>MindEase - Your Sanctuary</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            /* Light Mode - Requested Natural Palette */
+            --bg-main: #EEF4F1;
+            --bg-surface: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --bg-card-hover: #F8FAF9;
+            --text-primary: #14211E;
+            --text-secondary: #4A5E59;
+            --text-muted: #8B9D98;
+            --primary: #7FAF9B;
+            --accent-soft: #DDE7E2;
+            --btn-primary-bg: #7FAF9B;
+            --btn-primary-text: #FFFFFF;
+            --btn-secondary-bg: #E8EFE8;
+            --btn-secondary-text: #14211E;
+            --input-bg: rgba(255, 255, 255, 0.8);
+            --input-border: #DDE7E2;
+            --divider: #E1E9E5;
+            --sos-bg: #C97272;
+            --sos-hover: #B45B5B;
+            --shadow: 0 10px 40px rgba(20, 33, 30, 0.05);
+        }
+
+        .dark {
+            /* Dark Mode - Midnight Forest */
+            --bg-main: #0A0F0E;
+            --bg-surface: #0E1615;
+            --bg-card: #121D1B;
+            --bg-card-hover: #182624;
+            --text-primary: #E8F0EE;
+            --text-secondary: #9EB0AB;
+            --text-muted: #5C6E6A;
+            --primary: #7FAF9B;
+            --accent-soft: #1B2B28;
+            --btn-primary-bg: #7FAF9B;
+            --btn-primary-text: #0A0F0E;
+            --btn-primary-hover: #92C2AE;
+            --btn-secondary-bg: #1B2B28;
+            --btn-secondary-text: #E8F0EE;
+            --btn-secondary-hover: #233A36;
+            --input-bg: #0E1615;
+            --input-border: #233A36;
+            --input-text: #E8F0EE;
+            --input-placeholder: #5C6E6A;
+            --divider: #1B2B28;
+            --sos-bg: #C97272;
+            --sos-hover: #B45B5B;
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            scroll-behavior: smooth;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1), color 0.6s ease;
         }
         .font-serif {
             font-family: 'Playfair Display', serif;
         }
-        @keyframes breathe {
-            0%, 100% { transform: scale(1); opacity: 0.6; }
-            50% { transform: scale(1.15); opacity: 1; }
-        }
-        .animate-breathe {
-            animation: breathe 8s ease-in-out infinite;
-        }
         .glass {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(var(--bg-surface-rgb, 255, 255, 255), 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(var(--text-primary-rgb, 20, 33, 30), 0.08);
         }
-        .dark-glass {
-            background: rgba(15, 28, 46, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .dark .glass {
+            background: rgba(14, 22, 21, 0.7);
+            border: 1px solid rgba(232, 240, 238, 0.05);
+        }
+        .card-shadow {
+            box-shadow: var(--shadow);
+        }
+        
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes breathing {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .animate-cinematic {
+            animation: fadeInScale 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-breathing {
+            animation: breathing 15s ease-in-out infinite;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            opacity: 0.3;
+            border-radius: 10px;
         }
     </style>
 <script type="importmap">
@@ -46,7 +119,7 @@
 }
 </script>
 </head>
-<body class="bg-[#E6F2EE] text-[#2F4F4F]">
+<body>
     <div id="root"></div>
 </body>
 </html>

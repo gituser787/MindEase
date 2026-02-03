@@ -11,157 +11,249 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin }) => {
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <div className="overflow-x-hidden">
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 text-center bg-gradient-to-b from-[#E6F2EE] via-[#F4FAF8] to-[#FFFFFF]">
-        {/* Parallax elements */}
+    <div className="min-h-screen bg-[#F8FAF9] text-[#14211E] selection:bg-[#7FAF9B]/20 overflow-x-hidden">
+      {/* Cinematic Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 px-8 py-8 md:px-16 md:py-12 flex items-center justify-between pointer-events-none">
         <div 
-          className="absolute top-20 left-10 w-64 h-64 bg-[#C9DAD6]/30 rounded-full blur-3xl animate-breathe"
-          style={{ transform: `translateY(${scrollY * 0.2}px)` }}
-        />
-        <div 
-          className="absolute bottom-20 right-10 w-96 h-96 bg-[#8FB9A8]/20 rounded-full blur-3xl animate-breathe"
-          style={{ transform: `translateY(${scrollY * -0.1}px)` }}
-        />
-
-        <div className="z-10 max-w-4xl space-y-8">
-          <div className="space-y-4">
-            <h1 className="text-5xl md:text-7xl font-serif font-bold text-[#2F4F4F] leading-tight opacity-0 animate-[fadeIn_1s_ease-out_forwards]">
-              Find Your Calm.<br /><span className="text-[#8FB9A8]">One Day at a Time.</span>
-            </h1>
-            <p className="text-lg md:text-xl text-[#2F4F4F]/70 max-w-2xl mx-auto opacity-0 animate-[fadeIn_1s_ease-out_0.5s_forwards]">
-              A safe digital space for peace, reflection, and emotional balance. Your journey to mental wellness starts with a single breath.
-            </p>
+          className="flex items-center gap-3 pointer-events-auto cursor-pointer group" 
+          onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}
+        >
+          <div className="w-12 h-12 bg-[#14211E] rounded-2xl flex items-center justify-center transition-all duration-700 group-hover:rotate-[15deg] group-hover:shadow-[0_0_30px_rgba(127,175,155,0.3)]">
+            <i className="fa-solid fa-leaf text-[#7FAF9B] text-xl"></i>
           </div>
+          <span className="font-serif text-3xl font-bold tracking-tighter text-[#14211E] drop-shadow-sm">MindEase</span>
+        </div>
+        
+        <div className="pointer-events-auto hidden md:flex items-center gap-8">
+          <button 
+            onClick={onLogin}
+            className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#4A5E59] hover:text-[#14211E] transition-colors"
+          >
+            Sign In
+          </button>
+          <button 
+            onClick={onStart}
+            className="bg-[#14211E] text-white px-8 py-4 rounded-full text-[11px] font-bold uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-xl"
+          >
+            Begin Journey
+          </button>
+        </div>
+      </nav>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 opacity-0 animate-[fadeIn_1s_ease-out_1s_forwards]">
+      {/* Hero: The Deep Breath */}
+      <section className="relative h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ 
+              backgroundImage: `url('https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=2400')`,
+              transform: `scale(1.1) translateY(${scrollY * 0.15}px)`,
+              filter: 'brightness(0.95)'
+            }}
+          ></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-[#F8FAF9]"></div>
+          {/* Grainy Film Texture */}
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-20 pointer-events-none"></div>
+        </div>
+
+        <div className="relative z-10 max-w-6xl space-y-10 animate-cinematic">
+          <div className="space-y-4">
+            <p className="text-[#7FAF9B] text-[12px] uppercase tracking-[0.8em] font-bold opacity-0 animate-[fadeIn_1s_ease_forwards_0.5s]">Your Professional Sanctuary</p>
+            <h1 className="font-serif text-7xl md:text-[11rem] font-bold leading-[0.85] tracking-tighter text-[#14211E]">
+              Find your <br />
+              <span className="italic font-light text-[#7FAF9B]">center</span> again.
+            </h1>
+          </div>
+          
+          <p className="text-xl md:text-3xl text-[#4A5E59] max-w-3xl mx-auto leading-relaxed font-light opacity-90 px-4">
+            An AI-driven space for emotional resilience, quiet reflection, and transformative growth. Built for the modern mind.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 pt-10">
             <button 
               onClick={onStart}
-              className="px-8 py-4 bg-[#8FB9A8] text-white rounded-full font-semibold shadow-lg shadow-[#8FB9A8]/30 hover:bg-[#7BA696] hover:-translate-y-1 transition-all duration-300"
+              className="group bg-[#14211E] text-white px-16 py-8 rounded-[2.5rem] font-bold text-2xl shadow-[0_40px_80px_-15px_rgba(20,33,30,0.4)] hover:scale-105 active:scale-95 transition-all duration-700 flex items-center gap-8"
             >
-              Get Started
+              Start Free Journey
+              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-[#7FAF9B] transition-colors">
+                <i className="fa-solid fa-arrow-right text-sm"></i>
+              </div>
             </button>
-            <button 
-              onClick={onLogin}
-              className="px-8 py-4 bg-white text-[#2F4F4F] border border-[#2F4F4F]/10 rounded-full font-semibold hover:bg-white/80 hover:-translate-y-1 transition-all duration-300"
-            >
-              Sign In
-            </button>
-          </div>
-
-          <div className="pt-12 animate-bounce opacity-40">
-            <i className="fa-solid fa-chevron-down text-2xl"></i>
           </div>
         </div>
 
-        {/* Cinematic Illustration Overlay Simulation */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
-          <div className="absolute top-1/4 left-1/4 w-full h-full bg-[url('https://picsum.photos/1200/800?grayscale')] bg-cover mix-blend-overlay"></div>
+        <div className="absolute bottom-12 flex flex-col items-center gap-4 opacity-30 animate-bounce">
+           <div className="w-[1px] h-16 bg-gradient-to-b from-transparent to-[#14211E]"></div>
+           <span className="text-[10px] uppercase tracking-[0.5em] font-bold">Discover More</span>
         </div>
       </section>
 
-      {/* Why Mental Peace Matters */}
-      <section className="py-24 px-6 bg-white">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-          <div className="space-y-6">
-            <h2 className="text-4xl font-serif font-bold text-[#2F4F4F]">Why Mental Peace Matters</h2>
-            <p className="text-lg text-[#2F4F4F]/80 leading-relaxed">
-              In a world that never stops, taking a moment to breathe isn't just a luxury—it's a necessity. 
-              Mental peace improves focus, relationships, sleep, and overall health.
+      {/* Value Prop: The Modern Struggle */}
+      <section className="py-40 md:py-64 bg-white px-8">
+        <div className="max-w-7xl mx-auto flex flex-col items-center text-center space-y-24">
+          <div className="space-y-6 max-w-4xl">
+            <h2 className="text-5xl md:text-8xl font-serif font-bold tracking-tighter leading-tight">
+              The noise of the world <br /> 
+              <span className="italic font-light text-[#7FAF9B]">ends here.</span>
+            </h2>
+            <p className="text-2xl text-[#8B9D98] font-light leading-relaxed">
+              In an era of constant notifications, we provide the silence necessary to hear your own thoughts. MindEase isn't just an app; it's a practice.
             </p>
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-[#E6F2EE] rounded-full flex items-center justify-center flex-shrink-0 text-[#8FB9A8]">
-                  <i className="fa-solid fa-check"></i>
-                </div>
-                <div>
-                  <h4 className="font-bold text-[#2F4F4F]">Emotional Resilience</h4>
-                  <p className="text-[#2F4F4F]/60">Build the strength to navigate life's ups and downs with grace.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-[#E6F2EE] rounded-full flex items-center justify-center flex-shrink-0 text-[#8FB9A8]">
-                  <i className="fa-solid fa-check"></i>
-                </div>
-                <div>
-                  <h4 className="font-bold text-[#2F4F4F]">Clarity of Mind</h4>
-                  <p className="text-[#2F4F4F]/60">Reduce the mental clutter and find focus in your daily tasks.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="relative h-[400px] rounded-3xl overflow-hidden shadow-2xl">
-            <img 
-              src="https://picsum.photos/seed/nature/800/600" 
-              alt="Peaceful nature" 
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#2F4F4F]/40 to-transparent"></div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Overview */}
-      <section className="py-24 px-6 bg-[#E6F2EE]/50">
-        <div className="max-w-6xl mx-auto text-center space-y-16">
-          <div className="space-y-4">
-            <h2 className="text-4xl font-serif font-bold">Everything You Need to Bloom</h2>
-            <p className="text-[#2F4F4F]/60 max-w-xl mx-auto">Thoughtfully designed tools to support your emotional well-being every single day.</p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-16 w-full">
             {[
-              { title: 'Mood Tracking', desc: 'Log your emotions with notes and context.', icon: 'fa-face-smile' },
-              { title: 'SerenAI Companion', desc: 'Empathetic, non-judgmental support 24/7.', icon: 'fa-heart' },
-              { title: 'Wellness Exercises', desc: 'Breathing tools and mindfulness guides.', icon: 'fa-wind' },
-              { title: 'Privacy First', desc: 'End-to-end encryption for your personal space.', icon: 'fa-shield-halved' },
-              { title: 'Progress Insights', desc: 'Visualize your emotional journey over time.', icon: 'fa-chart-pie' },
-              { title: 'Safe Haven', desc: 'A community of hope and mutual understanding.', icon: 'fa-house-chimney' },
-            ].map((f, i) => (
-              <div key={i} className="p-8 bg-white rounded-3xl shadow-sm border border-transparent hover:border-[#8FB9A8]/20 hover:shadow-xl transition-all duration-500 group">
-                <div className="w-12 h-12 bg-[#E6F2EE] rounded-2xl flex items-center justify-center text-[#8FB9A8] mb-6 group-hover:bg-[#8FB9A8] group-hover:text-white transition-colors duration-500">
-                  <i className={`fa-solid ${f.icon} text-xl`}></i>
+              { title: "Empathetic AI", desc: "Conversations with SerenAI designed to validate, reframe, and support your daily emotions.", icon: "fa-comment-sparkles" },
+              { title: "Visual Landscape", desc: "Track your moods through a cinematic timeline that reveals the patterns of your peace.", icon: "fa-chart-area" },
+              { title: "Interactive Relief", desc: "Immediate grounding exercises and breathing patterns for moments of acute stress.", icon: "fa-wind" }
+            ].map((feature, i) => (
+              <div key={i} className="space-y-8 group">
+                <div className="w-24 h-24 bg-[#F8FAF9] rounded-[2.5rem] flex items-center justify-center text-[#7FAF9B] mx-auto shadow-sm group-hover:scale-110 group-hover:bg-[#14211E] group-hover:text-white transition-all duration-700">
+                  <i className={`fa-solid ${feature.icon} text-3xl`}></i>
                 </div>
-                <h3 className="text-xl font-bold mb-3">{f.title}</h3>
-                <p className="text-[#2F4F4F]/60 text-sm leading-relaxed">{f.desc}</p>
+                <div className="space-y-4">
+                  <h3 className="text-3xl font-serif font-bold">{feature.title}</h3>
+                  <p className="text-lg text-[#4A5E59] font-light leading-relaxed opacity-80">{feature.desc}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-24 px-6 text-center">
-        <div className="max-w-4xl mx-auto bg-[#2F4F4F] rounded-[3rem] py-16 px-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#8FB9A8]/20 rounded-full blur-[100px]"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-[80px]"></div>
-          
-          <div className="relative z-10 space-y-8">
-            <h2 className="text-4xl md:text-5xl font-serif font-bold text-white leading-tight">You are not alone.</h2>
-            <p className="text-white/70 max-w-lg mx-auto">Take the first step towards a calmer, more mindful version of yourself today.</p>
-            <button 
-              onClick={onStart}
-              className="px-10 py-4 bg-white text-[#2F4F4F] rounded-full font-bold hover:bg-[#8FB9A8] hover:text-white transition-all duration-300"
-            >
-              Get Started for Free
-            </button>
+      {/* Narrative Section: Deep Focus */}
+      <section className="py-40 px-8 bg-[#EEF4F1]/30">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-32 items-center">
+          <div className="relative order-2 lg:order-1">
+            <div className="aspect-[4/5] rounded-[4rem] overflow-hidden shadow-2xl border-[20px] border-white relative z-10">
+              <img 
+                src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=1200" 
+                alt="Mindfulness" 
+                className="w-full h-full object-cover transition-transform duration-[3000ms] hover:scale-110" 
+              />
+            </div>
+            {/* Soft Shadow Glow */}
+            <div className="absolute -bottom-16 -right-16 bg-white p-12 rounded-[3.5rem] shadow-2xl z-20 max-w-xs border border-gray-50">
+               <div className="w-12 h-12 bg-[#7FAF9B] rounded-2xl flex items-center justify-center text-white mb-6">
+                 <i className="fa-solid fa-quote-left"></i>
+               </div>
+               <p className="font-serif italic text-3xl leading-snug">"Healing isn't linear, but it starts with being present."</p>
+            </div>
+          </div>
+
+          <div className="space-y-12 order-1 lg:order-2 text-center lg:text-left">
+            <div className="space-y-6">
+               <span className="text-[10px] uppercase tracking-[0.6em] font-bold text-[#7FAF9B]">Built on Science</span>
+               <h2 className="text-6xl md:text-8xl font-serif font-bold tracking-tighter leading-tight">
+                 Evidence-based <br />
+                 <span className="italic font-light text-[#7FAF9B]">compassion.</span>
+               </h2>
+               <p className="text-2xl text-[#4A5E59] font-light leading-relaxed">
+                 We've integrated clinical principles of Cognitive Behavioral Therapy (CBT) and Mindfulness-Based Stress Reduction (MBSR) into a seamless, beautiful digital experience.
+               </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start">
+               <div className="flex items-center gap-4 bg-white px-8 py-6 rounded-3xl shadow-sm border border-gray-100">
+                  <i className="fa-solid fa-shield-check text-[#7FAF9B] text-xl"></i>
+                  <span className="text-sm font-bold uppercase tracking-widest opacity-60">100% Private</span>
+               </div>
+               <div className="flex items-center gap-4 bg-white px-8 py-6 rounded-3xl shadow-sm border border-gray-100">
+                  <i className="fa-solid fa-brain-circuit text-[#7FAF9B] text-xl"></i>
+                  <span className="text-sm font-bold uppercase tracking-widest opacity-60">AI Optimized</span>
+               </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <footer className="py-8 px-6 text-center text-sm text-[#2F4F4F]/40 border-t border-[#2F4F4F]/5">
-        &copy; 2024 MindEase. Built with love for your peace of mind.
-      </footer>
+      {/* Testimonials / Trust */}
+      <section className="py-40 bg-white px-8">
+        <div className="max-w-5xl mx-auto text-center space-y-24">
+          <h2 className="text-5xl md:text-7xl font-serif font-bold tracking-tighter">Trusted by thousands <br /> seeking stillness.</h2>
+          <div className="grid md:grid-cols-2 gap-12 text-left">
+            {[
+              { text: "The interface alone makes me feel calmer. SerenAI has become a part of my morning routine, helping me set intentions with clarity.", author: "Elena R.", role: "Design Director" },
+              { text: "I've tried many mood trackers, but MindEase is the first one that feels like a sanctuary rather than a chore.", author: "Marcus T.", role: "Health Professional" }
+            ].map((t, i) => (
+              <div key={i} className="bg-[#F8FAF9] p-12 rounded-[3.5rem] space-y-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500">
+                <p className="text-2xl font-light text-[#4A5E59] leading-relaxed italic">"{t.text}"</p>
+                <div className="flex items-center gap-4 pt-4 border-t border-gray-200/50">
+                  <div className="w-12 h-12 bg-[#7FAF9B]/20 rounded-full flex items-center justify-center text-[#7FAF9B] font-bold">
+                    {t.author[0]}
+                  </div>
+                  <div>
+                    <p className="font-bold text-[#14211E]">{t.author}</p>
+                    <p className="text-[10px] uppercase tracking-widest opacity-40">{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA: The Call to Peace */}
+      <section className="py-60 bg-[#14211E] text-white text-center relative overflow-hidden px-8">
+        {/* Abstract Background Detail */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-[#7FAF9B]/5 rounded-full blur-[180px] pointer-events-none"></div>
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-[0.03] pointer-events-none"></div>
+
+        <div className="max-w-4xl mx-auto space-y-20 relative z-10">
+          <div className="space-y-8">
+            <div className="w-24 h-24 bg-white/5 rounded-[2.5rem] flex items-center justify-center mx-auto border border-white/10 mb-12 animate-breathing shadow-2xl shadow-[#7FAF9B]/10">
+               <i className="fa-solid fa-lotus text-5xl text-[#7FAF9B]"></i>
+            </div>
+            <h2 className="text-6xl md:text-[9rem] font-serif font-bold tracking-tighter leading-[0.85]">
+              Begin your <br />
+              <span className="italic font-light opacity-40 text-[#7FAF9B]">evolution.</span>
+            </h2>
+            <p className="text-white/40 text-xs uppercase tracking-[0.8em] font-bold">No credit card required. Purely peace.</p>
+          </div>
+          
+          <button 
+            onClick={onStart}
+            className="group px-24 py-12 bg-[#7FAF9B] text-white rounded-[3.5rem] font-bold text-3xl shadow-[0_40px_100px_rgba(127,175,155,0.4)] hover:bg-white hover:text-[#14211E] hover:-translate-y-4 transition-all duration-700 flex items-center justify-center gap-12 mx-auto"
+          >
+            Start Journey
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-[#14211E] group-hover:text-white transition-all duration-500">
+              <i className="fa-solid fa-arrow-right"></i>
+            </div>
+          </button>
+
+          <div className="pt-24 flex flex-wrap justify-center gap-12 text-[10px] font-bold uppercase tracking-[0.5em] opacity-20">
+            <span>© 2024 MindEase</span>
+            <span className="hidden sm:inline">•</span>
+            <span>Privacy Policy</span>
+            <span className="hidden sm:inline">•</span>
+            <span>Terms of Service</span>
+          </div>
+        </div>
+      </section>
 
       <style>{`
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
+          from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes cinematic {
+          from { opacity: 0; transform: translateY(60px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-cinematic {
+          animation: cinematic 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes breathing {
+          0%, 100% { transform: scale(1) opacity(0.8); }
+          50% { transform: scale(1.1) opacity(1); }
+        }
+        .animate-breathing {
+          animation: breathing 5s ease-in-out infinite;
         }
       `}</style>
     </div>

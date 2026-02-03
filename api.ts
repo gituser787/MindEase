@@ -1,42 +1,55 @@
 
 import { MoodEntry, User } from './types';
 
-const API_BASE = '/api';
+const STORAGE_KEYS = {
+  MOODS: 'mindease_moods',
+  USER: 'mindease_user'
+};
+
+// Helper to simulate network latency
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const api = {
   async fetchMoods(): Promise<MoodEntry[]> {
-    const res = await fetch(`${API_BASE}/moods`);
-    if (!res.ok) throw new Error('Failed to fetch moods');
-    return res.json();
+    await delay(500);
+    const data = localStorage.getItem(STORAGE_KEYS.MOODS);
+    return data ? JSON.parse(data) : [];
   },
 
   async createMood(entry: Omit<MoodEntry, '_id' | 'id'>): Promise<MoodEntry> {
-    const res = await fetch(`${API_BASE}/moods`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(entry),
-    });
-    if (!res.ok) throw new Error('Failed to create mood');
-    return res.json();
+    await delay(300);
+    const moods = await this.fetchMoods();
+    const newEntry: MoodEntry = {
+      ...entry,
+      _id: Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(36).substr(2, 9)
+    };
+    const updatedMoods = [newEntry, ...moods];
+    localStorage.setItem(STORAGE_KEYS.MOODS, JSON.stringify(updatedMoods));
+    return newEntry;
   },
 
   async login(name: string, email: string): Promise<User> {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email }),
-    });
-    if (!res.ok) throw new Error('Login failed');
-    return res.json();
+    await delay(800);
+    const existingUser = localStorage.getItem(STORAGE_KEYS.USER);
+    if (existingUser) {
+      const user = JSON.parse(existingUser);
+      if (user.email === email) return user;
+    }
+    
+    const newUser: User = {
+      name,
+      email,
+      bio: "Finding peace one day at a time.",
+      avatar: ""
+    };
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(newUser));
+    return newUser;
   },
 
   async updateUser(user: User): Promise<User> {
-    const res = await fetch(`${API_BASE}/user`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(user),
-    });
-    if (!res.ok) throw new Error('Failed to update user');
-    return res.json();
+    await delay(600);
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+    return user;
   }
 };
